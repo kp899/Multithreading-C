@@ -63,7 +63,29 @@ void menu(){
         puts("Invalid input");
         continue;
     }
-    if
+    if(strcmp(reply,"1") == 0){
+      system("clear");
+      game_state = 1;
+      break;
+    }
+    if((reply,"2") == 0){
+      system("clear");
+      game_state = 1;
+    }
+    if(strcmp(reply,"3") ==0){
+      printf("\nClosing Gaming system\n");
+      close(socket_desc);
+      exit(EXIT_SUCCESS);
+    }
+  }
+}
 
+int get_port_no(char* input){
+  int num = 0;
+  if(input != NULL){
+    //check port
+    if(strlen(input) < 4 || strlen(input) > 5){
+      puts("Invalid port");
+    }
   }
 }
