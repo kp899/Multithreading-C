@@ -54,7 +54,7 @@ void menu(){
   char ** response = malloc(sizeof(char *) * 1);
 
   while(1){
-    printf("Please enter a selection\n\n<1> Play Hangman\n<2> Show Leaderboard\n<3> Quit\n");
+    printf("Please enter a selection\n\n<1> Play Minesweeper\n<2> Show Leaderboard\n<3> Quit\n");
     printf("\nSelect an option 1-3 -> ");
     fgets(response, MAX_MESSAGE_SIZE, stdin);
     strcpy(message,(response));
