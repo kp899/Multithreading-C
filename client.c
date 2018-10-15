@@ -56,7 +56,7 @@ void menu(){
   while(1){
     printf("Please enter a selection\n\n<1> Play Minesweeper\n<2> Show Leaderboard\n<3> Quit\n");
     printf("\nSelect an option 1-3 -> ");
-    fgets(response, MAX_MESSAGE_SIZE, stdin);
+    fgets(response, MAXIMUM_MES_SIZE, stdin);
     strcpy(message,(response));
 
     if ((strlen(message)) > 1) {
@@ -79,6 +79,8 @@ void menu(){
     }
   }
 }
+void play_game(){}
+void show_leader_board(){}
 
 int get_port_no(char* input){
   int num = 0;
@@ -88,4 +90,73 @@ int get_port_no(char* input){
       puts("Invalid port");
     }
   }
+}
+
+int main(int argc, char *argv[]){
+	char * ip = argv[1];
+	int port = get_port_no(argv[2]);
+	int read_size;
+if(ip == NULL) {
+        printf("IP has not been provided\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if ((inet_pton(AF_INET, ip, &(server.sin_addr.s_addr))) == 0) {
+        printf("IP is not a valid format\n");
+        exit(EXIT_FAILURE);
+    }
+    // set up socket
+    socket_desc = socket(AF_INET, SOCK_STREAM, 0);
+    // create socket
+    
+    if (socket_desc < 0) {
+        printf("Could not create socket\n");
+        exit(EXIT_FAILURE);
+    } else {
+        printf("Socket created\n");
+    }
+    // Prepare the sockaddr_in structure
+    server.sin_family = AF_INET; // set up IPV4 address
+    // broadcast on any available IP that belongs to the host machine
+    server.sin_addr.s_addr = inet_addr(ip);
+    server.sin_port = htons(port);// set port address to program argument
+    
+    if (connect(socket_desc, (struct sockaddr *)&server , sizeof(server)) < 0) {
+        perror("connect failed. Error");
+        exit(EXIT_FAILURE);
+    } else {
+        // Check if the connection to the server is open once connecting
+        // if it isn't the server has disconnected from the client
+        char * reply = (char *)malloc(MAXIMUM_MES_SIZE * sizeof(char));
+        read_size = recv(socket_desc , reply , MAXIMUM_MES_SIZE , 0);
+        if (read_size <= 0) {
+            puts("Server full, closing application");
+            shutdown(socket_desc, 2);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+
+    while(1) {
+        
+        if (game_state == -1) {
+            login();
+        }
+
+        if (game_state == 0) {
+            menu();
+        }
+
+        if (game_state == 1) {
+            play_game();
+        }
+
+        if (game_state == 2) {
+           show_leader_board();
+        }
+        
+    }
+
+    close(socket_desc);
+    return 0;
 }
