@@ -7,7 +7,7 @@
 #include<pthread.h>
 #include<time.h>
 
-#define MAX_MESSAGE_SIZE 2000
+#define MAXIMUM_MES_SIZE 1000
 
 //Socket variables
 int socket_desc, client_socket;
