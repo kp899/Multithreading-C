@@ -15,12 +15,12 @@ struct sockaddr_in server, client;
 // struct to use size for inialisation of client socekt
 socklen_t client_addr_size;
 // Authorized user Data
-char ** users;
-char ** passwords;
+char * users;
+char * passwords;
 
 // Utility function for sending messages to a client socket
 void send_message (int socket, char * str){
-    if(send(socket , str , MAX_MESSAGE_SIZE , 0) < 0) {
+    if(send(socket , str , MAXIMUM_MES_SIZE , 0) < 0) {
         puts("Send failed");
     }  
 }
@@ -84,7 +84,7 @@ int main(int argc, char*argv[]) {
     setup_socket(get_port_no(argv[1]));
 
     while(1) {
-
+			send_message(socket_desc,"hey");
     }
 
     return 0;

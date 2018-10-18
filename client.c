@@ -14,6 +14,13 @@ struct sockaddr_in server;
 int socket_desc;
 char * username;
 
+//Trim a /n or a new line character
+char * trim_line(char * input_str){
+	int len = strlen(input_str);
+	input_str[len - 1] = '\0';
+	return input_str;
+}
+
 //login Screen
 void login(){
   //defining variables and assigning memory
@@ -26,6 +33,9 @@ void login(){
   fgets(username,MAXIMUM_MES_SIZE, stdin);
   printf("Please enter your password");
   fgets(password,MAXIMUM_MES_SIZE,stdin);
+  strcat(message,trim_line(username));
+  strcat(message, ",");
+  strcat(message,trim_line(password));
 
   if(send(socket_desc, message, MAXIMUM_MES_SIZE,0)<0){
     puts("Problem Communicating with the server\nApplication closing");
@@ -51,13 +61,13 @@ void login(){
 void menu(){
   char * reply = (char*)malloc(MAXIMUM_MES_SIZE * sizeof(char));
   char * message = (char*)malloc(MAXIMUM_MES_SIZE * sizeof(char));
-  char ** response = malloc(sizeof(char *) * 1);
+  char * response = malloc(sizeof(char *) * 1);
 
   while(1){
     printf("Please enter a selection\n\n<1> Play Minesweeper\n<2> Show Leaderboard\n<3> Quit\n");
     printf("\nSelect an option 1-3 -> ");
     fgets(response, MAXIMUM_MES_SIZE, stdin);
-    strcpy(message,(response));
+    strcpy(message,trim_line(response));
 
     if ((strlen(message)) > 1) {
         puts("Invalid input");
@@ -121,7 +131,7 @@ if(ip == NULL) {
     server.sin_addr.s_addr = inet_addr(ip);
     server.sin_port = htons(port);// set port address to program argument
     
-    if (connect(socket_desc, (struct sockaddr *)&server , sizeof(server)) < 0) {
+   if (connect(socket_desc, (struct sockaddr *)&server , sizeof(server)) < 0) {
         perror("connect failed. Error");
         exit(EXIT_FAILURE);
     } else {
@@ -135,8 +145,6 @@ if(ip == NULL) {
             exit(EXIT_FAILURE);
         }
     }
-
-
     while(1) {
         
         if (game_state == -1) {
@@ -156,7 +164,6 @@ if(ip == NULL) {
         }
         
     }
-
     close(socket_desc);
     return 0;
 }
