@@ -7,8 +7,12 @@
 #include<pthread.h>
 #include<time.h>
 
-#define MAXIMUM_MES_SIZE 1000
+#define MAXIMUM_MES_SIZE 2000
+#define MAXIMUM_CLIENTS 10
 
+pthread_t consumer_threads[MAXIMUM_CLIENTS], producer_thread;
+pthread_mutex_t leader_board_lock, request_que_lock;
+pthread_cond_t cond_leader_board;
 //Socket variables
 int socket_desc, client_socket;
 struct sockaddr_in server, client;
@@ -17,6 +21,10 @@ socklen_t client_addr_size;
 // Authorized user Data
 char * users;
 char * passwords;
+
+int que_length = 0, current_high_scores = 0, file_size = 0, shutdown_threads = 0, users_connected = 0, read_leaderboard = 0;
+// Id variables to monitor what thread is doing what
+int id[MAXIMUM_CLIENTS];
 
 // Utility function for sending messages to a client socket
 void send_message (int socket, char * str){
