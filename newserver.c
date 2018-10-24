@@ -32,11 +32,14 @@ void send_message (int socket, char * str){
         puts("Send failed");
     }
 }
+
+struct request * get_request = NULL;
+struct request *last_request = NULL;
 struct request{
   int request_id;
   int socket; //client socket descriptor
   struct request * next;
-}
+};
 // Get a request from the que
 struct request * get_request() {
     //lock que
@@ -80,7 +83,7 @@ void *consumer_handler(void* args){
   int game_state = -1, finished_sending_list = 0, got_request =0;
   char * user = NULL;
   char * msg = (char *)malloc(1000 * sizeof(char));
-  char * client_msg = (char *)malloc(MAX_MESSAGE_SIZE * sizeof(char));
+  char * client_msg = (char *)malloc(MAXIMUM_MES_SIZE * sizeof(char));
   struct request * client = NULL;
   struct request * temp_request = NULL;
   sprintf(msg,"Thread %i waiting for work",id);
