@@ -48,6 +48,20 @@ int port_number(char* port){
   return number;
 }
 
+//Develop game functions
+void login(){
+
+}
+void menu(){
+
+}
+void game(){
+
+}
+void leader_board(){
+
+}
+
 int main(int argc, char * argv[]){
   signal(SIGINT, handle_signal);
 
