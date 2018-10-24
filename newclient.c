@@ -65,8 +65,34 @@ int main(int argc, char * argv[]){
   int port = port_number(argv[2]);
   //set up socket
   socket_desc = Socket(AF_INET, SOCK_STREAM,0);
-  if(socket_desc <0){
+  if (socket_desc < 0) {
+        printf("Could not create socket\n");
+        exit(EXIT_FAILURE);
+    } else {
+        printf("Socket created\n");
+    }
+    // Prepare the sockaddr_in structure
+    server.sin_family = AF_INET; // set IP address
+    server.sin_addr.s_addr = inet_addr(ip);
+    server.sin_port = htons(port);// set port address to program argument
 
-  }
-
+    if (connect(socket_desc, (struct sockaddr *)&server , sizeof(server)) < 0) {
+        perror("connect failed. Error");
+        exit(EXIT_FAILURE);
+    } else {
+        // Check if the connection to the server is open once connecting
+        // if it isn't the server has disconnected from the client
+        char * reply = (char *)malloc(MAX_MESSAGE_SIZE * sizeof(char));
+        read_size = recv(socket_desc , reply , MAX_MESSAGE_SIZE , 0);
+        if (read_size <= 0) {
+            puts("Server full, closing application");
+            shutdown(socket_desc, 2);
+            exit(EXIT_FAILURE);
+        }
+    }
+    while(1){
+      if(game_state == -1){
+        login();
+      }
+    }
 }
