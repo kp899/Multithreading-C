@@ -41,13 +41,14 @@ void send_message (int socket, char * str){
     }
 }
 
-struct request * first_request = NULL;
-struct request *last_request = NULL;
+
 struct request{
   int request_id;
   int socket; //client socket descriptor
   struct request * next;
 };
+struct request * first_request = NULL;
+struct request *last_request = NULL;
 // Get a request from the que
 struct request * get_request(){
     //lock que
@@ -87,47 +88,43 @@ void add_request(int request_id, int socket) {
 }
 void *consumer_handler(void* args){
   int id = *((int *)args);
-  int read_size, socket;
-  int game_state = -1, finished_sending_list = 0, got_request =0;
-  char * user = NULL;
-  char * msg = (char *)malloc(1000 * sizeof(char));
-  char * client_msg = (char *)malloc(MAXIMUM_MES_SIZE * sizeof(char));
-  struct request * client = NULL;
-  struct request * temp_request = NULL;
-  sprintf(msg,"Thread %i waiting for work",id);
-  puts(msg);
-  //Run a while loop unless
-  while(shutdown_threads == 0){
-    temp_request = get_request();
-    if(got_request == 0){
-      client = (struct request*)malloc(sizeof(struct request));
-                client = temp_request;
-                socket = client->socket;
-                sprintf(msg,"Thread %i handling client %i", id, client->request_id);
-                puts(msg);
-                got_request = 1;
-    }
-    if(got_request == 1){
-      if((read_size = recv(socket , client_msg , MAXIMUM_MES_SIZE , 0)) > 0 ) {
-    // Login mode
-    if (game_state == -1) {
-      //  char * temp_user = process_login(client_msg);
-        /*
-        process_login will return a NULL when there is no match if it returns
-        a NULL the client is sent a -3 which instructs it to disconnect if the
-        return value isn't null then the clients name will be copied to the threads
-        memory and the game state will be moved to 0 (menu)
-        */
-      /*  if (temp_user != NULL) {
-            user = (char *)malloc(strlen(temp_user) * sizeof(char));
-            strcpy(user, temp_user);
-            send_message(socket, "0");
-            game_state = 0;
-        } else {
-            send_message(socket, "-3");
-      */  }
-      }
-    }
+ int game_state = -1, got_request = 0, finished_sending_list = 0;
+ int read_size, socket;
+ //char * phrase = NULL, * display_phrase = NULL;
+ char * user = NULL;
+ char * msg = (char *)malloc(1000 * sizeof(char));
+ char * client_msg = (char *)malloc(MAXIMUM_MES_SIZE * sizeof(char));
+ struct request * client = NULL;
+ struct request * temp_request = NULL;
+ sprintf(msg,"Thread %i waiting for work...", id);
+ puts(msg);
+ // Run while loop unless a flag for shutting down the thread is changed
+ while(shutdown_threads == 0) {
+     // Keep polling for a client
+     temp_request = get_request();
+
+     if (got_request == 0) {
+         /*
+         If the que returns a client copy that clients socket details to the thread
+         and change the got_request flag so it stops trying to get a new client
+         */
+         if (temp_request != NULL) {
+             client = (struct request*)malloc(sizeof(struct request));
+             client = temp_request;
+             socket = client->socket;
+             sprintf(msg,"Thread %i handling client %i", id, client->request_id);
+             puts(msg);
+             got_request = 1;
+         }
+     }
+              if(got_request == 1){
+                if((read_size = recv(socket , client_msg , MAXIMUM_MES_SIZE , 0)) > 0 ) {
+                  // Login mode
+                  if (game_state == -1) {
+
+                  }
+                }
+              }
 
   sprintf(msg, "Cleaning thread %i....", id);
   puts(msg);
