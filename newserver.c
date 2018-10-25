@@ -111,24 +111,24 @@ void *consumer_handler(void* args){
       if((read_size = recv(socket , client_msg , MAXIMUM_MES_SIZE , 0)) > 0 ) {
     // Login mode
     if (game_state == -1) {
-        char * temp_user = process_login(client_msg);
+      //  char * temp_user = process_login(client_msg);
         /*
         process_login will return a NULL when there is no match if it returns
         a NULL the client is sent a -3 which instructs it to disconnect if the
         return value isn't null then the clients name will be copied to the threads
         memory and the game state will be moved to 0 (menu)
         */
-        if (temp_user != NULL) {
+      /*  if (temp_user != NULL) {
             user = (char *)malloc(strlen(temp_user) * sizeof(char));
             strcpy(user, temp_user);
             send_message(socket, "0");
             game_state = 0;
         } else {
             send_message(socket, "-3");
-        }
+      */  }
       }
     }
-  }
+
   sprintf(msg, "Cleaning thread %i....", id);
   puts(msg);
   shutdown(socket, 2);
