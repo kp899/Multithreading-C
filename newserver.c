@@ -10,6 +10,8 @@
 #define MAXIMUM_MES_SIZE 2000
 #define MAXIMUM_CLIENTS 10
 
+char * process_login(char * input){}
+
 pthread_t consumer_threads[MAXIMUM_CLIENTS], producer_thread;
 pthread_mutex_t leader_board_lock, request_que_lock;
 pthread_cond_t cond_leader_board;
@@ -25,7 +27,13 @@ char * passwords;
 int que_length = 0, current_high_scores = 0, file_size = 0, shutdown_threads = 0, users_connected = 0, read_leaderboard = 0;
 // Id variables to monitor what thread is doing what
 int id[MAXIMUM_CLIENTS];
-
+//delay function
+void wait(int ms){
+  clock_t start_time = clock();
+  while(clock()<start_time + ms){
+    ;
+  }
+}
 // Utility function for sending messages to a client socket
 void send_message (int socket, char * str){
     if(send(socket , str , MAXIMUM_MES_SIZE , 0) < 0) {
@@ -33,7 +41,7 @@ void send_message (int socket, char * str){
     }
 }
 
-struct request * get_request = NULL;
+struct request * first_request = NULL;
 struct request *last_request = NULL;
 struct request{
   int request_id;
@@ -41,7 +49,7 @@ struct request{
   struct request * next;
 };
 // Get a request from the que
-struct request * get_request() {
+struct request * get_request(){
     //lock que
     pthread_mutex_lock(&request_que_lock);
 
@@ -79,7 +87,7 @@ void add_request(int request_id, int socket) {
 }
 void *consumer_handler(void* args){
   int id = *((int *)args);
-  int read_size,socket;
+  int read_size, socket;
   int game_state = -1, finished_sending_list = 0, got_request =0;
   char * user = NULL;
   char * msg = (char *)malloc(1000 * sizeof(char));
@@ -100,7 +108,7 @@ void *consumer_handler(void* args){
                 got_request = 1;
     }
     if(got_request == 1){
-      if((read_size = recv(socket , client_msg , MAX_MESSAGE_SIZE , 0)) > 0 ) {
+      if((read_size = recv(socket , client_msg , MAXIMUM_MES_SIZE , 0)) > 0 ) {
     // Login mode
     if (game_state == -1) {
         char * temp_user = process_login(client_msg);
@@ -128,8 +136,9 @@ void *consumer_handler(void* args){
   free(msg);
   free(client_msg);
   free(client);
-  delay(100000);
+  wait(100000);
   return NULL;
+}
 }
 void *producer_handler(void * args){
   int client_id = 0;
@@ -140,7 +149,7 @@ void *producer_handler(void * args){
       break;
     }
     if((client_socket = accept(socket_desc, (struct sockaddr *)&client,&client_addr_size)) > 0) {
-        if (users_connected < MAX_CLIENTS) {
+        if (users_connected < MAXIMUM_CLIENTS) {
             send_message(client_socket, "-1");
             puts("Connection Accepted");
             add_request(client_id, client_socket);
@@ -219,9 +228,9 @@ void sigint_handler(int signo) {
         shutdown(client_socket, 2);
         shutdown(socket_desc, 2);
 
-        for (int i = 0; i < MAX_CLIENTS; i++ ) {
+        for (int i = 0; i < MAXIMUM_CLIENTS; i++ ) {
             if ((pthread_join(consumer_threads[i], NULL)) == 0) {
-                delay(10000);
+                wait(10000);
                 printf("Worker thread %i successfully terminated\n", i);
             } else {
                 printf("Worker thread %i could not terminated\n", i);
@@ -241,7 +250,7 @@ void sigint_handler(int signo) {
 void setup_threads() {
     pthread_create(&producer_thread, NULL, &producer_handler, NULL);
 
-    for (int i = 0; i < MAX_CLIENTS; i++) {
+    for (int i = 0; i < MAXIMUM_CLIENTS; i++)  {
         id[i] = i;
         pthread_create(&consumer_threads[i], NULL, &consumer_handler, (void*)&id[i]);
     }
