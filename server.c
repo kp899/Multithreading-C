@@ -21,9 +21,7 @@ socklen_t client_addr_size;
 // Authorized user Data
 char ** users;
 char ** passwords;
-// Hangman word data
-char ** words;
-char ** nouns;
+
 
 // Simple delay function
 void delay(int milli_seconds) {
