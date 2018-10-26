@@ -102,12 +102,14 @@ void menu() {
     }
 }
 
-void handle_signit(int sig) { 
-    printf("SIGINT detected %d\n", sig);
-    printf("Exiting has begun.");
-    close(socket_desc);
-    exit(EXIT_SUCCESS);
-} 
+void sigint_handler(int signo) {
+    if (signo == SIGINT) {
+        printf("\nSIGINT detected, closing program\n");
+        close(socket_desc);   
+        exit(EXIT_SUCCESS);
+    }
+}
+
 
 int get_port_no(char* input) {
     int num = 0;
@@ -132,8 +134,7 @@ int get_port_no(char* input) {
 }
 
 int main(int argc, char * argv[]) {
-    signal(SIGINT, handle_signit);
-
+    signal(SIGINT, sigint_handler);
     char * ip = argv[1];
     int port = get_port_no(argv[2]);
     int read_size;
