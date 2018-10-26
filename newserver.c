@@ -6,11 +6,10 @@
 #include<arpa/inet.h>
 #include<pthread.h>
 #include<time.h>
+#include<ctype.h>
 
 #define MAXIMUM_MES_SIZE 2000
 #define MAXIMUM_CLIENTS 10
-
-char * process_login(char * input){}
 
 pthread_t consumer_threads[MAXIMUM_CLIENTS], producer_thread;
 pthread_mutex_t leader_board_lock, request_que_lock;
@@ -21,8 +20,9 @@ struct sockaddr_in server, client;
 // struct to use size for inialisation of client socekt
 socklen_t client_addr_size;
 // Authorized user Data
-char * users;
-char * passwords;
+char ** users;
+char ** passwords;
+
 
 int que_length = 0, current_high_scores = 0, file_size = 0, shutdown_threads = 0, users_connected = 0, read_leaderboard = 0;
 // Id variables to monitor what thread is doing what
@@ -40,8 +40,7 @@ void send_message (int socket, char * str){
         puts("Send failed");
     }
 }
-
-
+//Thread functions
 struct request{
   int request_id;
   int socket; //client socket descriptor
@@ -70,6 +69,88 @@ struct request * get_request(){
     pthread_mutex_unlock(&request_que_lock);
     return a_request;
 }
+
+//Game functions
+// Utility function for loading a file and returning its contents
+char ** load_file (char * filename) {
+    file_size = 0;
+    FILE *auth;
+    int array_size = 1;
+    char str[500];
+    char msg[500];
+    char ** temp_array;
+    auth = fopen(filename, "r");
+
+    if (auth == NULL) {
+        sprintf(msg, "Could not open file, %s\n", filename);
+        puts(msg);
+    } else {
+        sprintf(msg, "Loading file, %s", filename);
+        puts(msg);
+    }
+
+    temp_array  = (char **)malloc(sizeof(char *) * array_size);
+    //Keep reading lines from a file till there are none left to read
+    while (1) {
+        int status = fscanf(auth, "%s", str);
+        if (status == 1) {
+            temp_array[array_size - 1] = (char *)malloc(sizeof(char) * strlen(str));
+            strcpy(temp_array[array_size - 1], str);
+            array_size++;
+            file_size++;
+            temp_array  = (char **)realloc(temp_array ,sizeof(char *) * array_size);
+        }
+        if (status == EOF) {
+                break;
+        }
+    }
+    return temp_array;
+}
+//Process the Autentication.txt file and add it to a global double pointer array
+void load_users() {
+    char ** temp_array = load_file("Authentication.txt");
+
+    int index_step = 0;
+    users  = (char **)malloc((file_size) * sizeof(char *));
+    passwords  = (char **)malloc((file_size) * sizeof(char *));
+
+    for (int i = 3; i < file_size; i+=2) {
+        users[index_step] = malloc(strlen(temp_array[i - 1]) * sizeof(char *));
+        strcpy(users[index_step], temp_array[i - 1]);
+
+        passwords[index_step] = malloc(strlen(temp_array[i]) * sizeof(char *));
+        strcpy(passwords[index_step], temp_array[i]);
+
+        index_step ++;
+    }
+    free(temp_array);
+}
+//Check a clients username and login to make sure that combination exists
+char * process_login(char * input){
+    char * user = malloc(sizeof(char *) * 500);
+    char * pass = malloc(sizeof(char *) * 500);
+    int pass_match = 0,user_match = 0,index = 0;
+
+    sscanf(input, "%[^,],%[^,]", user, pass);
+
+    while (users[index] != NULL) {
+
+        if (strcmp(user, users[index]) == 0) {
+            user_match = 1;
+            if (strcmp(pass, passwords[index]) == 0) {
+                pass_match = 1;
+                break;
+            }
+        }
+        index ++;
+    }
+    if (user_match == 1 && pass_match == 1){
+        return user;
+    } else {
+        return NULL;
+    }
+}
+//C
 // Add a request to the que
 void add_request(int request_id, int socket) {
     struct request * a_request = (struct request*)malloc(sizeof(struct request));
@@ -118,13 +199,26 @@ void *consumer_handler(void* args){
          }
      }
               if(got_request == 1){
-                if((read_size = recv(socket , client_msg , MAXIMUM_MES_SIZE , 0)) > 0 ) {
-                  // Login mode
-                  if (game_state == -1) {
-
-                  }
+                if (game_state == -1) {
+                  char * temp_user = process_login(client_msg);
+/*
+process_login will return a NULL when there is no match if it returns
+a NULL the client is sent a -3 which instructs it to disconnect if the
+return value isn't null then the clients name will be copied to the threads
+memory and the game state will be moved to 0 (menu)
+*/
+if (temp_user != NULL) {
+    user = (char *)malloc(strlen(temp_user) * sizeof(char));
+    strcpy(user, temp_user);
+    send_message(socket, "0");
+    game_state = 0;
+} else {
+    send_message(socket, "-3");
+}
+                    }
                 }
-              }
+                }
+
 
   sprintf(msg, "Cleaning thread %i....", id);
   puts(msg);
@@ -135,7 +229,6 @@ void *consumer_handler(void* args){
   free(client);
   wait(100000);
   return NULL;
-}
 }
 void *producer_handler(void * args){
   int client_id = 0;
@@ -244,20 +337,20 @@ void sigint_handler(int signo) {
         exit(EXIT_SUCCESS);
     }
 }
-void setup_threads() {
+void thread_setup() {
     pthread_create(&producer_thread, NULL, &producer_handler, NULL);
-
     for (int i = 0; i < MAXIMUM_CLIENTS; i++)  {
         id[i] = i;
         pthread_create(&consumer_threads[i], NULL, &consumer_handler, (void*)&id[i]);
     }
 }
 
+
 int main(int argc, char*argv[]) {
     srand(time(NULL));
     signal(SIGINT, sigint_handler);
     setup_socket(get_port_no(argv[1]));
-    setup_threads();
+    thread_setup();
     while(1) {
     }
     return 0;
