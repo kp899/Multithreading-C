@@ -17,7 +17,12 @@ int socket_desc; //Socket descriptor
 int game_state = -1;
 struct sockaddr_in server;
 char * username;
-
+// Trims a new line character
+char * trim_new_line(char * input_str) {
+    int len = strlen(input_str);
+    input_str[len - 1] = '\0';
+    return input_str;
+}
 void handle_signal(int  signo){
   if(signo == SIGINT){
     printf("\nSIGINT deteted, exiting program\n");
@@ -58,7 +63,11 @@ void login(){
   char *message = (char*)malloc(MAXIMUM_MES_SIZE * sizeof(char));
   printf("Please enter your username\n");
   fgets(username, MAXIMUM_MES_SIZE,stdin);
+  printf("PLease enter your password");
   fgets(password, MAXIMUM_MES_SIZE,stdin);
+  strcat(message,trim_new_line(username));
+  strcat(message, ",");
+  strcat(message,trim_new_line(password));
   printf("Please enter your password\n");
   if(send(socket_desc, message, MAXIMUM_MES_SIZE,0)<0){
     puts("Unable to reach server\n Closing");
@@ -133,8 +142,9 @@ int main(int argc, char *argv[]){
   }
     while(1){
       if(game_state == -1){
-        login();
-      }
+        //login();
+        printf("%d",&game_state);
+            }
       if(game_state==0){
         printf("logged in");
       }

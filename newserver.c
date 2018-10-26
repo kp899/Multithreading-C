@@ -126,10 +126,11 @@ void load_users() {
     free(temp_array);
 }
 //Check a clients username and login to make sure that combination exists
+//Check a clients username and login to make sure that combination exists
 char * process_login(char * input){
     char * user = malloc(sizeof(char *) * 500);
     char * pass = malloc(sizeof(char *) * 500);
-    int pass_match = 0,user_match = 0,index = 0;
+    int pass_match = 0, user_match = 0, index = 0;
 
     sscanf(input, "%[^,],%[^,]", user, pass);
 
@@ -149,8 +150,8 @@ char * process_login(char * input){
     } else {
         return NULL;
     }
+
 }
-//C
 // Add a request to the que
 void add_request(int request_id, int socket) {
     struct request * a_request = (struct request*)malloc(sizeof(struct request));
@@ -201,25 +202,26 @@ void *consumer_handler(void* args){
               if(got_request == 1){
                 if (game_state == -1) {
                   char * temp_user = process_login(client_msg);
-/*
-process_login will return a NULL when there is no match if it returns
-a NULL the client is sent a -3 which instructs it to disconnect if the
-return value isn't null then the clients name will be copied to the threads
-memory and the game state will be moved to 0 (menu)
-*/
-if (temp_user != NULL) {
-    user = (char *)malloc(strlen(temp_user) * sizeof(char));
-    strcpy(user, temp_user);
-    send_message(socket, "0");
-    game_state = 0;
-} else {
-    send_message(socket, "-3");
-}
+                    /*
+                    process_login will return a NULL when there is no match if it returns
+                    a NULL the client is sent a -3 which instructs it to disconnect if the
+                    return value isn't null then the clients name will be copied to the threads
+                    memory and the game state will be moved to 0 (menu)
+                    */
+                    if (temp_user != NULL) {
+                        user = (char *)malloc(strlen(temp_user) * sizeof(char));
+                        strcpy(user, temp_user);
+                        send_message(socket, "0");
+                        game_state = 0;
+                    } else {
+                        send_message(socket, "-3");
+                    }
+                    }
+                    if(game_state == 0){
+                      printf("Client is browsing menu ");
                     }
                 }
                 }
-
-
   sprintf(msg, "Cleaning thread %i....", id);
   puts(msg);
   shutdown(socket, 2);
@@ -231,27 +233,31 @@ if (temp_user != NULL) {
   return NULL;
 }
 void *producer_handler(void * args){
-  int client_id = 0;
-  puts("Producer thread waiting for connections...");
-  while(1){
-    if(shutdown_threads == 1){
-      puts("Cleaning producer thread..");
-      break;
+    int client_id = 0;
+    puts("Producer thread waiting for connections...");
+
+    while(1) {
+
+        if (shutdown_threads == 1) {
+            puts("Cleaning producer thread....");
+            break;
+        }
+
+        if((client_socket = accept(socket_desc, (struct sockaddr *)&client,&client_addr_size)) > 0) {
+                if (users_connected < MAXIMUM_CLIENTS) {
+                    send_message(client_socket, "-1");
+                    puts("Connection Accepted");
+                    add_request(client_id, client_socket);
+                    client_id ++;
+                    users_connected ++;
+                } else {
+                    shutdown(client_socket, 2);
+                    puts("Server full disconnecting client");
+
+                }
+        }
     }
-    if((client_socket = accept(socket_desc, (struct sockaddr *)&client,&client_addr_size)) > 0) {
-        if (users_connected < MAXIMUM_CLIENTS) {
-            send_message(client_socket, "-1");
-            puts("Connection Accepted");
-            add_request(client_id, client_socket);
-            client_id ++;
-            users_connected ++;
-        } else {
-            shutdown(client_socket, 2);
-            puts("Server full disconnecting client");
-            }
-      }
-  }
-  return NULL;
+    return NULL;
 }
 
 // Assign port number
