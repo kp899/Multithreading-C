@@ -50,7 +50,7 @@ void login_screen() {
     if (strcmp(reply, "0") == 0) {
         system("clear");
         printf("\n===============================================\n");
-        printf("\nWelcome to the Online Hangman Gaming System\n");
+        printf("\nWelcome to the Online Minesweeper Gaming System\n");
         printf("\n===============================================\n\n\n");
         game_state = 0;
     }
@@ -63,7 +63,7 @@ void menu() {
 
     while(1) {
 
-        printf("Please enter a selection\n\n<1> Play Hangman\n<2> Show Leaderboard\n<3> Quit\n");
+        printf("Please enter a selection\n\n<1> Play Minesweeper\n<2> Show Leaderboard\n<3> Quit\n");
         printf("\nSelect an option 1-3 -> ");
         fgets(response, MAX_MESSAGE_SIZE, stdin);
         strcpy(message, trim_new_line(response));
@@ -95,19 +95,20 @@ void menu() {
         }
 
         if (strcmp(reply, "3") == 0) {
-            printf("\nClosing Hangman Gaming system\n");
+            printf("\nClosing Minesweeper Gaming system\n");
             close(socket_desc);
             exit(EXIT_SUCCESS);
         }
     }
 }
-void sigint_handler(int signo) {
-    if (signo == SIGINT) {
-        printf("\nSIGINT detected, closing program\n");
-        close(socket_desc);
-        exit(EXIT_SUCCESS);
-    }
-}
+
+void handle_signit(int sig) { 
+    printf("SIGINT detected %d\n", sig);
+    printf("Exiting has begun.");
+    close(socket_desc);
+    exit(EXIT_SUCCESS);
+} 
+
 int get_port_no(char* input) {
     int num = 0;
     // Check if the array element is null
@@ -131,7 +132,7 @@ int get_port_no(char* input) {
 }
 
 int main(int argc, char * argv[]) {
-    signal(SIGINT, sigint_handler);
+    signal(SIGINT, handle_signit);
 
     char * ip = argv[1];
     int port = get_port_no(argv[2]);
